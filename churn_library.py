@@ -5,7 +5,7 @@
 from pandas.errors import ParserError
 
 import logging
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import seaborn as sns; sns.set()
@@ -38,18 +38,56 @@ def import_data(path : str) -> pd.DataFrame:
 
     return None
 
-def univariate_quantitative_analysis(df : pd.DataFrame, column : str, path : str, statistic : str = "density") -> None:
+def histplot_analysis(df:pd.DataFrame, column:str, dir_path:str) -> None:
+    '''
+    Generates and saves histogram plots for a single attributes within a DataFrame
 
-    full_path = os.path.join(path,'histplots',f'{column}_{statistic}_histplot.png')
+    input:
 
+            df: DataFrame containing data for analysis
+            column: Idientifies which single attribute to generate an analysis of
+            path: Identifies the directory path at which the file should be stored
+    output:
+            None
+
+    '''
+
+    full_path = os.path.join(dir_path,'histplots',f'{column}_histplot.png')
     try:
-        sns.histplot(df[column], stat='density', kde=True)
 
+        sns.histplot(df[column], stat='density', kde=True)
+        plt.savefig(full_path)
 
     except KeyError:
-        logging.error('Unable to parse file at path %s' % path)
-    
-    
+        logging.error('Unable to find columns %s in dataframe' % column)
+    except IOError:
+        logging.error('Unable to write plot to path %s' % full_path)
+
+def category_count_analysis(df:pd.DataFrame, column:str, dir_path:str) -> None:
+    '''
+    Generates and saves histogram plots for a single attributes within a DataFrame
+
+    input:
+
+            df: DataFrame containing data for analysis
+            column: Idientifies which single attribute to generate an analysis of
+            path: Identifies the directory path at which the file should be stored
+    output:
+            None
+
+    '''
+
+    full_path = os.path.join(dir_path,'category_counts',f'{column}_category_count.png')
+    try:
+
+        df[column].value_counts('normalize').plot(kind='bar')
+        plt.savefig(full_path)
+
+    except KeyError:
+        logging.error('Unable to find columns %s in dataframe' % column)
+    except IOError:
+        logging.error('Unable to write plot to path %s' % full_path)    
+
 
 def perform_eda(df):
     '''
@@ -60,8 +98,41 @@ def perform_eda(df):
     output:
             None
     '''
-    
 
+    cat_columns = [
+    'Gender',
+    'Education_Level',
+    'Marital_Status',
+    'Income_Category',
+    'Card_Category'                
+    ]
+
+    quant_columns = [
+        'Customer_Age',
+        'Dependent_count', 
+        'Months_on_book',
+        'Total_Relationship_Count', 
+        'Months_Inactive_12_mon',
+        'Contacts_Count_12_mon', 
+        'Credit_Limit', 
+        'Total_Revolving_Bal',
+        'Avg_Open_To_Buy', 
+        'Total_Amt_Chng_Q4_Q1', 
+        'Total_Trans_Amt',
+        'Total_Trans_Ct', 
+        'Total_Ct_Chng_Q4_Q1', 
+        'Avg_Utilization_Ratio'
+    ]
+    
+    base_path = 'images'
+    
+    quant_path = os.path.join(base_path,'quantitative_reports')
+    for col in quant_columns:
+        histplot_analysis(df, col, quant_path)
+
+    cat_path = os.path.join(base_path,'categorical_reports')
+    for col in cat_columns:
+        category_count_analysis(df, col, cat_path)
 
 def encoder_helper(df, category_lst, response):
     '''
