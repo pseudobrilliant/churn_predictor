@@ -1,0 +1,6 @@
+data/*
+images/*
+models/*
+logs/*
+.env
+__pycache__

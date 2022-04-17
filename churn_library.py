@@ -10,10 +10,6 @@ import os
 import pandas as pd
 import seaborn as sns; sns.set()
 
-os.environ['QT_QPA_PLATFORM']='offscreen'
-
-
-
 def import_data(path : str) -> pd.DataFrame:
     '''
     returns dataframe for the csv found at path
@@ -28,12 +24,16 @@ def import_data(path : str) -> pd.DataFrame:
         df = pd.read_csv(path)
         return df
 
-    except FileNotFoundError:
+    except FileNotFoundError as err:
         logging.error('Unable to open file at path %s' % path)
+        raise
     except PermissionError:
         logging.error('Unable to open file at path %s due to permission issues' % path)
+        raise
     except ParserError:
         logging.error('Unable to parse file at path %s' % path)
+        raise
+        
 
 
     return None
@@ -52,16 +52,24 @@ def histplot_analysis(df:pd.DataFrame, column:str, dir_path:str) -> None:
 
     '''
 
-    full_path = os.path.join(dir_path,'histplots',f'{column}_histplot.png')
+    hist_path = os.path.join(dir_path,'histplots')
+    os.mkdir(hist_path)
+
+    full_path = os.path.join(hist_path,f'{column}_histplot.png')
     try:
 
         sns.histplot(df[column], stat='density', kde=True)
         plt.savefig(full_path)
+        return full_path
 
     except KeyError:
         logging.error('Unable to find columns %s in dataframe' % column)
+        raise
     except IOError:
         logging.error('Unable to write plot to path %s' % full_path)
+        raise
+        
+    return None
 
 def category_count_analysis(df:pd.DataFrame, column:str, dir_path:str) -> None:
     '''
@@ -89,7 +97,7 @@ def category_count_analysis(df:pd.DataFrame, column:str, dir_path:str) -> None:
         logging.error('Unable to write plot to path %s' % full_path)    
 
 
-def perform_eda(df):
+def perform_eda(df:pd.DataFrame, cat_col:list, quant_col:list) -> None:
     '''
     perform eda on df and save figures to images folder
     input:
@@ -97,34 +105,8 @@ def perform_eda(df):
 
     output:
             None
-    '''
-
-    cat_columns = [
-    'Gender',
-    'Education_Level',
-    'Marital_Status',
-    'Income_Category',
-    'Card_Category'                
-    ]
-
-    quant_columns = [
-        'Customer_Age',
-        'Dependent_count', 
-        'Months_on_book',
-        'Total_Relationship_Count', 
-        'Months_Inactive_12_mon',
-        'Contacts_Count_12_mon', 
-        'Credit_Limit', 
-        'Total_Revolving_Bal',
-        'Avg_Open_To_Buy', 
-        'Total_Amt_Chng_Q4_Q1', 
-        'Total_Trans_Amt',
-        'Total_Trans_Ct', 
-        'Total_Ct_Chng_Q4_Q1', 
-        'Avg_Utilization_Ratio'
-    ]
-    
-    base_path = 'images'
+    '''    
+    base_path = os.getenv("IMAGES_DIR")
     
     quant_path = os.path.join(base_path,'quantitative_reports')
     for col in quant_columns:
