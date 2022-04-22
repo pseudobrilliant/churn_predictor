@@ -3,7 +3,16 @@
 
 # import libraries
 from pandas.errors import ParserError
+from sklearn.preprocessing import normalize
+from sklearn.model_selection import train_test_split
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.metrics import plot_roc_curve, classification_report
+
+import joblib
 import logging
 import matplotlib.pyplot as plt
 import os
@@ -109,14 +118,15 @@ def perform_eda(df:pd.DataFrame, cat_col:list, quant_col:list) -> None:
     base_path = os.getenv("IMAGES_DIR")
     
     quant_path = os.path.join(base_path,'quantitative_reports')
-    for col in quant_columns:
+    for col in quant_col:
         histplot_analysis(df, col, quant_path)
 
     cat_path = os.path.join(base_path,'categorical_reports')
-    for col in cat_columns:
+    for col in cat_col:
         category_count_analysis(df, col, cat_path)
 
-def encoder_helper(df, category_lst, response):
+
+def encoder_helper(df, category_lst, target_col, response=None):
     '''
     helper function to turn each categorical column into a new column with
     propotion of churn for each category - associated with cell 15 from the notebook
@@ -129,45 +139,67 @@ def encoder_helper(df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
-    pass
+
+    postfix = response if response else str.capitalize(target_col)
+    
+    for category in category_lst:
+        name = f"{category}_{postfix}"
+        group_means = df.groupby(category).mean()[target_col]
+        values_list = [group_means.loc[val] for val in df[category]]
+        df[name] = values_list
+
+    return df
 
 
-def perform_feature_engineering(df, response):
+def perform_feature_engineering(df, target_col, keep_col):
     '''
     input:
               df: pandas dataframe
-              response: string of response name [optional argument that could be used for naming variables or index y column]
 
     output:
-              X_train: X training data
-              X_test: X testing data
+              x_train: X training data
+              x_test: X testing data
               y_train: y training data
               y_test: y testing data
     '''
 
-def classification_report_image(y_train,
-                                y_test,
-                                y_train_preds_lr,
-                                y_train_preds_rf,
-                                y_test_preds_lr,
-                                y_test_preds_rf):
+    try:
+        x = df[keep_col]
+        y = df[target_col]
+    except KeyError as key_err:
+        logging.error("Key value not found in dataframe" % key_err)
+        raise
+
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size= 0.3, random_state=42)
+    return  x_train, x_test, y_train, y_test
+
+
+
+def classification_report(y_true, y_pred, name, dir_path):
     '''
     produces classification report for training and testing results and stores report as image
     in images folder
     input:
             y_train: training response values
             y_test:  test response values
-            y_train_preds_lr: training predictions from logistic regression
-            y_train_preds_rf: training predictions from random forest
-            y_test_preds_lr: test predictions from logistic regression
-            y_test_preds_rf: test predictions from random forest
 
     output:
              None
     '''
-    pass
+    class_report_dir = os.path.join(dir_path,'classifications')
+    os.mkdir(class_report_dir)
 
+    full_path = os.path.join(class_report_dir,f'{name}_classifications.png')
 
+    class_report = classification_report(y_true, y_pred, output_dict=True)
+
+    logging.info("classification_report: %s results" % name)
+    logging.info("%s" % str(class_report))
+
+    sns.heatmap(pd.DataFrame(class_report).iloc[:-1, :].T, annot=True)
+    plt.savefig(full_path)
+
+    
 def feature_importance_plot(model, X_data, output_pth):
     '''
     creates and stores the feature importances in pth
@@ -181,15 +213,85 @@ def feature_importance_plot(model, X_data, output_pth):
     '''
     pass
 
-def train_models(X_train, X_test, y_train, y_test):
+def train_models(x_train, x_test, y_train, y_test):
     '''
     train, store model results: images + scores, and store models
     input:
-              X_train: X training data
-              X_test: X testing data
+              x_train: X training data
+              x_test: X testing data
               y_train: y training data
               y_test: y testing data
     output:
               None
     '''
-    pass
+
+    images_dir = os.getenv("IMAGES_DIR")
+    models_dir = os.getenv("MODELS_DIR")
+    roc_dir = os.path.join(images_dir,"roc")
+    os.mkdir(roc_dir)
+
+    model_list = [train_linear_model, train_random_forest_model]
+
+    plt.figure(figsize=(15, 8))
+    ax = plt.gca()
+
+    for train in model_list:
+        model = train(x_train, x_test, y_train, y_test)
+
+        name = train.__name__
+
+        y_train_preds = model.predict(x_train)
+        classification_report(y_train, y_train_preds, f"{name}_train", images_dir)
+
+        y_test_preds = model.predict(x_test)
+        classification_report(y_test, y_test_preds, f"{name}_test", images_dir)
+
+        plot_roc_curve(model, x_test, y_test, ax=ax, alpha=0.8)
+        
+        joblib.dump(model, os.path.join(models_dir, f'{name}_model.pkl'))
+       
+    plt.savefig(os.path(roc_dir,"all_models_roc.png"))
+
+
+def train_linear_model(x_train, y_train):
+    '''
+    train, store model results: images + scores, and store models
+    input:
+              x_train: X training data
+              x_test: X testing data
+              y_train: y training data
+              y_test: y testing data
+    output:
+              None
+    '''
+
+    lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
+    lrc.fit(x_train, y_train)
+
+    return lrc
+
+
+def train_random_forest_model(x_train, y_train):
+    '''
+    train, store model results: images + scores, and store models
+    input:
+              x_train: X training data
+              x_test: X testing data
+              y_train: y training data
+              y_test: y testing data
+    output:
+              None
+    '''
+    rfc = RandomForestClassifier(random_state=42)
+
+    param_grid = { 
+        'n_estimators': [200, 500],
+        'max_features': ['auto', 'sqrt'],
+        'max_depth' : [4,5,100],
+        'criterion' :['gini', 'entropy']
+    }
+
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    cv_rfc.fit(x_train, y_train)
+
+    return cv_rfc.best_estimator_
