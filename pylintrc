@@ -1,0 +1,7 @@
+[BASIC]
+
+good-names=i,j,k,x,y,df
+
+[MESSAGES_CONTROL]
+
+disable= R0914,R0913
