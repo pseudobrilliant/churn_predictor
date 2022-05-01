@@ -71,8 +71,8 @@ class ChurnPredictor():
         logging.info('Initializing paths at output directory %s', self.out_dir)
 
         try:
-            self.data_dir = os.path.join(self.out_dir, 'data')
-            os.makedirs(self.data_dir,exist_ok=True)
+            self.processed_dir = os.path.join(self.out_dir, 'processed')
+            os.makedirs(self.processed_dir,exist_ok=True)
 
             self.images_dir = os.path.join(self.out_dir, 'images')
             os.makedirs(self.images_dir,exist_ok=True)
@@ -93,9 +93,6 @@ class ChurnPredictor():
                 report_path = os.path.join(self.images_dir, report)
                 os.makedirs(report_path, exist_ok=True)
                 self.report_dirs[report] = report_path
-
-            self.processed_path = os.path.join(self.data_dir, 'processed')
-            os.makedirs(self.processed_path, exist_ok=True)
 
         except PermissionError:
             logging.error('Insufficient permissions on output directory %s'
@@ -247,7 +244,7 @@ class ChurnPredictor():
             logging.error('Unable to encode data and complete processing')
             return None
 
-        out_path = os.path.join(self.processed_path, f'{data_name}_processed.csv')
+        out_path = os.path.join(self.processed_dir, f'{data_name}_processed.csv')
         logging.info('Saving processed data to %s', out_path)
 
         df.to_csv(out_path)
@@ -335,13 +332,16 @@ def run_predictor(cfg : DictConfig) -> None:
     # to pass the output directory to the churn predictor
     out_dir = os.getcwd()
 
+    data_filename = f'{cfg.data_name}.csv'
+    data_path = os.path.join(hydra.utils.get_original_cwd(),'data',data_filename)
+
     churn_predictor = ChurnPredictor(out_dir)
 
-    churn_predictor.analyze_data(cfg.data_path,
+    churn_predictor.analyze_data(data_path,
                                  cfg.categorical_columns,
                                  cfg.quantative_columns)
 
-    churn_predictor.train_models(cfg.data_path,
+    churn_predictor.train_models(data_path,
                                  cfg.target_column,
                                  cfg.training_columns,
                                  cfg.categorical_columns)

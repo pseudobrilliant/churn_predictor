@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-directories="./conf ./venv"
+directories="./conf ./venv ./data"
 
 for dir in $directories
 do
@@ -8,6 +8,8 @@ do
 if [ -d $dir ]; then
     rm -rf $dir
 fi
+
+mkdir $dir
 
 done
 
