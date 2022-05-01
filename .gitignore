@@ -1,6 +1,4 @@
-data/*
-images/*
-models/*
-logs/*
-.env
+outputs/*
+conf/*
+venv/*
 __pycache__
