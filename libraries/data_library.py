@@ -62,6 +62,15 @@ def data_filter_split(df,
 
         input:
             target_col: target column representing our y data
+            keep_col: list of columns to use as x features
+            test_size: optional value used to set size of testing set
+            rd_sate: random state used to seed random split
+
+        output:
+            x_train: dataframe containing training feature data
+            x_test: dataframe containing testing feature data
+            y_train: dataframe containing training target values
+            y_test: dataframe containing testing target value
 
     '''
     try:
