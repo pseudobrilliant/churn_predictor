@@ -31,22 +31,22 @@ def import_data(path : str) -> pd.DataFrame:
         logging.error('Unable to parse file at path %s', path)
         raise
 
-def category_mean_group_encoder(df, category_list:list, target_col:str) -> pd.DataFrame:
+def category_mean_group_encoder(df, category_list:list, churn_col:str) -> pd.DataFrame:
     '''
     helper function to turn each categorical column into a new column with
-    propotion of churn for each category - associated with cell 15 from the notebook
+    propotion of churn for each category
 
     input:
             df: pandas dataframe
             category_list: list of columns that contain categorical features
-            target_col: column by which to group and calculate mean
+            churn_col: column by which to group and calculate mean churn
 
     output:
             df: pandas dataframe with new calculated group means columns
     '''
     for category in category_list:
-        name = f"{category}_{target_col}"
-        group_means = df.groupby(category).mean()[target_col]
+        name = f"{category}_{churn_col}"
+        group_means = df.groupby(category).mean()[churn_col]
         values_list = [group_means.loc[val] for val in df[category]]
         df[name] = values_list
 

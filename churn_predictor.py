@@ -71,6 +71,7 @@ class ChurnPredictor():
         logging.info('Initializing paths at output directory %s', self.out_dir)
 
         try:
+            # Initializing core directories
             self.processed_dir = os.path.join(self.out_dir, 'processed')
             os.makedirs(self.processed_dir,exist_ok=True)
 
@@ -80,6 +81,7 @@ class ChurnPredictor():
             self.models_dir = os.path.join(self.out_dir, 'models')
             os.makedirs(self.models_dir,exist_ok=True)
 
+            # Initializing report directories under images
             report_dirs = [
                             'quantitative_reports',
                             'categorical_reports',
@@ -115,6 +117,7 @@ class ChurnPredictor():
 
         logging.info('Starting exploraroty data analysis')
 
+        # Reading data into datframe
         df = data_library.import_data(data_path)
         if df is None:
             logging.info('Unable to import data and complete analysis')
@@ -247,7 +250,7 @@ class ChurnPredictor():
         out_path = os.path.join(self.processed_dir, f'{data_name}_processed.csv')
         logging.info('Saving processed data to %s', out_path)
 
-        df.to_csv(out_path)
+        df.to_csv(out_path) # pylint: disable=no-member
 
         return df
 
@@ -304,13 +307,15 @@ class ChurnPredictor():
             plot_roc_curve(model, x_test, y_test, ax=fig_plot, alpha=0.8)
         plt.savefig(os.path.join(self.report_dirs['model_reports'],
                                 'all_models_roc.png'))
+        plt.close()
 
         plt.clf()
         for i,model in enumerate(models):
             if CUSTOM_ANALYSIS[i] is None:
                 continue
             for analysis in CUSTOM_ANALYSIS[i]:
-                logging.info('Running custom analysis for %s', names[i])
+                logging.info('Running custom analysis for %s'
+                             '(This may take 10 - 15 minutes)', names[i])
 
                 analysis(model,
                         x_test,
@@ -332,8 +337,7 @@ def run_predictor(cfg : DictConfig) -> None:
     # to pass the output directory to the churn predictor
     out_dir = os.getcwd()
 
-    data_filename = f'{cfg.data_name}.csv'
-    data_path = os.path.join(hydra.utils.get_original_cwd(),'data',data_filename)
+    data_path = os.path.join(hydra.utils.get_original_cwd(),'data',cfg.data_file)
 
     churn_predictor = ChurnPredictor(out_dir)
 

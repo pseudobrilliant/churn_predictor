@@ -38,6 +38,7 @@ def histplot_analysis(df:pd.DataFrame, column:str, dir_path:str, prefix:str=None
         plt.clf()
         sns.histplot(df[column], stat='density', kde=True)
         plt.savefig(full_path)
+        plt.close()
 
         logging.info('Saved histplots for %s in %s', column, full_path)
 
@@ -70,6 +71,7 @@ def category_count_analysis(df:pd.DataFrame, column:str, dir_path:str, prefix:st
         plt.clf()
         df[column].value_counts('normalize').plot(kind='bar')
         plt.savefig(full_path)
+        plt.close()
 
         logging.info('Saved value counts for %s in %s', column, full_path)
 
@@ -102,6 +104,7 @@ def heatmap_analysis(df:pd.DataFrame, dir_path:str, prefix=None) -> None:
         plt.clf()
         sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
         plt.savefig(full_path)
+        plt.close()
 
         logging.info('Saving heatmap to %s', full_path)
 
@@ -133,6 +136,7 @@ def classification_report_analysis(y_true, y_pred, name, dir_path, prefix=None):
     plt.clf()
     sns.heatmap(pd.DataFrame(class_report).iloc[:-1, :].T, annot=True)
     plt.savefig(full_path)
+    plt.close()
 
 
 def feature_class_analysis(model,
@@ -162,6 +166,7 @@ def feature_class_analysis(model,
     plt.clf()
     shap.summary_plot(shap_values, x_vals, plot_type="bar")
     plt.savefig(full_path)
+    plt.close()
 
 def feature_importance_analysis(model,
                                 x_vals:pd.DataFrame,
@@ -211,3 +216,4 @@ def feature_importance_analysis(model,
     plt.xticks(range(x_vals.shape[1]), names, rotation=90)
 
     plt.savefig(full_path)
+    plt.close()

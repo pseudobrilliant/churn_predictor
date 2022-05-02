@@ -1,6 +1,7 @@
 [BASIC]
 
 good-names=i,j,k,x,y,df
+ignore=tests,venv
 
 [MESSAGES_CONTROL]
 

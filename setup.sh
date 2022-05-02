@@ -13,7 +13,7 @@ mkdir $dir
 
 done
 
-
+deactivate
 python3.8 -m virtualenv venv
 source $PWD/venv/bin/activate
 python -m pip install -r requirements.txt

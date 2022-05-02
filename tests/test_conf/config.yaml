@@ -1,4 +1,4 @@
-data_name: "bank_data"
+data_file: "bank_data.csv"
 target_column: "Attrition_Flag"
 categorical_columns:
   - "Gender"
