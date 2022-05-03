@@ -113,6 +113,7 @@ def test_train_models(churn_scope):
     '''
     out_path, data_path, cfg, churn = churn_scope
 
+    # Attempt to disable showing plots during testing
     mpl.use('Agg')
 
     churn.train_models(data_path,

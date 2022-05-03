@@ -168,27 +168,32 @@ class ChurnPredictor():
 
         df = self._process_data(data_path, target_col, cat_col)
 
+        # Check to make sure that data was processed and returned
         if df is None:
             logging.info('Unable to proccess data and complete training')
             return None
 
+        # Get just the name of the file so we can use it in reports
         data_name = pathlib.Path(data_path).stem
 
+        # Break apart the data into a filtered train and testing set
         x_train, x_test, y_train, y_test = data_library.data_filter_split(df,
                                                                    target_col,
                                                                    keep_col)
 
+        # Train models based on the model functions provided in MODELS_TO_TRAIN 
         logging.info('Beginning model training')
         result_model_list = []
         for model_training in MODELS_TO_TRAIN:
 
             logging.info("Running training for %s", model_training.__name__)
 
+            # Train the model and it to list of results
             model = model_training(x_train, y_train)
             result_model_list.append(model)
 
+            # Create a name and path to save the model as
             name = str.lower(type(model).__name__)
-
             mpath = os.path.join(self.models_dir, f'{data_name}_{name}_model.pkl')
 
             logging.info('Saving a %s model to %s', name, mpath)
@@ -197,6 +202,7 @@ class ChurnPredictor():
 
         logging.info('Completed model training')
 
+        # Analyze all models generated on the train and testing set
         self._analyze_models(x_train,
                              x_test,
                              y_train,
@@ -310,12 +316,14 @@ class ChurnPredictor():
         plt.close()
 
         plt.clf()
+        # For each custom analysis selected for a model run the analysis
         for i,model in enumerate(models):
             if CUSTOM_ANALYSIS[i] is None:
                 continue
             for analysis in CUSTOM_ANALYSIS[i]:
                 logging.info('Running custom analysis for %s'
-                             '(This may take 10 - 15 minutes)', names[i])
+                             '(This may take some time depending on model)',
+                             names[i])
 
                 analysis(model,
                         x_test,
@@ -341,10 +349,12 @@ def run_predictor(cfg : DictConfig) -> None:
 
     churn_predictor = ChurnPredictor(out_dir)
 
+    # Run analysis on provided data and configuration
     churn_predictor.analyze_data(data_path,
                                  cfg.categorical_columns,
                                  cfg.quantative_columns)
 
+    # Run training on providded data and configuration
     churn_predictor.train_models(data_path,
                                  cfg.target_column,
                                  cfg.training_columns,
