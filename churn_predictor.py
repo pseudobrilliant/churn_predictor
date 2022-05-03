@@ -187,7 +187,7 @@ class ChurnPredictor():
             model = model_training(x_train, y_train)
             result_model_list.append(model)
 
-            name = type(model).__name__
+            name = str.lower(type(model).__name__)
 
             mpath = os.path.join(self.models_dir, f'{data_name}_{name}_model.pkl')
 

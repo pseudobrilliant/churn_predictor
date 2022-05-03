@@ -1,5 +1,5 @@
 '''
-Model library providing different training values
+Model library providing different model training methods
 '''
 
 from sklearn.linear_model import LogisticRegression

@@ -1,4 +1,5 @@
 outputs/*
+tests/outputs/*
 conf/*
 venv/*
 data/*
